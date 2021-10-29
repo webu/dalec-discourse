@@ -1,0 +1,21 @@
+{% extends "dalec/default/item.html" %}
+{% load dalec %}
+
+{% block item_content %}
+<div>
+    {{object.content_data.title}}
+
+    Dernier message: {{object.content_data.last_posted_at|api_date|timesince}}
+</div>
+<div>
+    <button id="btnFadetoggle"
+            class="btn btn-primary"
+            type="button"
+            onclick="$('.api-full').fadeToggle();"
+            >
+            Voir tout le retour de l'API
+    </button>
+    <pre class="api-full" style="display: none;"> {{ object.content_data|pprint }} </pre>
+</div>
+<hr>
+{% endblock %}
