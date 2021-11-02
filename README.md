@@ -34,6 +34,28 @@ General usage:
 {% dalec "discourse" content_type [channel=None] [channel_object=None] [template=None] %}
 ```
 
+Real examples:
+
+### Topics
+
+Retrieves latest topics:
+```django
+{% dalec "discourse" "topic" %}
+```
+
+Retrieves latest topics from a category:
+```django
+{% dalec "discourse" "tpic" channel="category" channel_object="15" %}
+```
+
+### Categories
+
+Retrieves discourse categories:
+```django
+{% dalec "discourse" "category" %}
+```
+
+
 ## Settings
 
 Django settings must define:
