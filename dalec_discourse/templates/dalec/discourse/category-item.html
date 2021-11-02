@@ -3,12 +3,10 @@
 
 {% block item_content %}
 <div>
-    <h3> {{object.content_data.title}} </h3>
+    <h3> {{object.content_data.name}} </h3>
 
-    <a href="{{object.content_data.base_url}}t/{{object.content_data.id}}"
-        target="_blank">Voir le topic</a>
-
-    il y a {{object.content_data.last_posted_at|api_date|timesince}}
+    <a href="{{object.content_data.base_url}}/c/{{object.content_data.id}}"
+        target="_blank">listes des topics</a>
 
 </div>
 <div>
