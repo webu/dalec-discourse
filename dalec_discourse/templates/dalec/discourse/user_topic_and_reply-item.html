@@ -1,0 +1,38 @@
+{% extends "dalec/default/item.html" %}
+{% load dalec %}
+
+{% block item_content %}
+<div>
+    <h3> 
+        <a
+            href="{{object.content_data.post_url}}" target="_blank">
+        {{object.content_data.title}}
+        </a>
+    </h3>
+    <div class="discourse-message">
+        {% if object.content_data.action_code is None %}
+        {{object.content_data.excerpt}}
+        {% else %}
+        {{object.content_data.action_code}}
+        {% endif %}
+    </div>
+
+    <div class="discourse-date">
+        il y a <span title='{{object.creation_dt|date:"DATE_FORMAT"}}'>
+            {{object.content_data.created_at|api_date|timesince}}
+        </span>
+    </div>
+
+</div>
+<div>
+    <button id="btnFadetoggle"
+            class="btn btn-primary"
+            type="button"
+            onclick="$('.api-full').fadeToggle();"
+            >
+            Voir tout le retour de l'API
+    </button>
+    <pre class="api-full" style="display: none;"> {{ object.content_data|pprint }} </pre>
+</div>
+<hr>
+{% endblock %}
