@@ -65,6 +65,13 @@ class DiscourseProxy(Proxy):
         contents = {}
         for topic in topics:
             category = category_show(client, topic["category_id"])
+
+            post_url = "{}/t/{}/{}".format(
+                    settings.DALEC_DISCOURSE_BASE_URL,
+                    topic["slug"],
+                    topic["id"],
+                    )
+
             contents[topic["id"]] = {
                 **topic,
                 "category": {
@@ -73,6 +80,7 @@ class DiscourseProxy(Proxy):
                     "slug": category["slug"],
                     },
                 "base_url": settings.DALEC_DISCOURSE_BASE_URL,  # to reconstruct different url later
+                "post_url": post_url,
                 "last_update_dt": now(),
                 "creation_dt": topic["created_at"],
             }
