@@ -2,24 +2,35 @@
 {% load dalec %}
 
 {% block item_content %}
-<div>
-    <h3> {{object.content_data.title}} </h3>
 
-    <a href="{{object.content_data.base_url}}t/{{object.content_data.id}}"
-        target="_blank">Voir le topic</a>
+<tr>
+    <td class="discourse topic title"> 
+        <a href="{{object.content_data.post_url}}" target="_blank">
+        {{object.content_data.title}}
+        </a>
+    </td>
+    <td class="discourse topic forum">
+        <a href="{{object.content_data.base_url}}/c/{{object.content_data.category_id}}" target="_blank">
+        {{object.content_data.category.name}}
+        </a>
+    </td>
 
-    il y a {{object.content_data.last_posted_at|api_date|timesince}}
+    <td class="discourse topic date">
+        il y a <span title='{{object.creation_dt|date:"DATE_FORMAT"}}'>
+            {{object.content_data.created_at|api_date|timesince}}
+        </span>
+    </td>
 
-</div>
-<div>
-    <button id="btnFadetoggle"
-            class="btn btn-primary"
-            type="button"
-            onclick="$('.api-full').fadeToggle();"
-            >
-            Voir tout le retour de l'API
-    </button>
-    <pre class="api-full" style="display: none;"> {{ object.content_data|pprint }} </pre>
-</div>
-<hr>
+    <td>
+        <button id="btnFadetoggle"
+                class="btn btn-primary"
+                type="button"
+                onclick="$('.api-full').fadeToggle();"
+                >
+                Voir tout le retour de l'API
+        </button>
+            <pre class="api-full" style="display: none;"> {{ object.content_data|pprint }} </pre>
+    </td>
+
+</tr>
 {% endblock %}

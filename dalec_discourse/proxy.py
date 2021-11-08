@@ -17,6 +17,13 @@ client = DiscourseClient(
 )
 
 
+# monkey patch because not yet upstream...
+def category_show(client, category_id):
+    response = client._get("/c/{0}/show".format(category_id))
+    return response["category"]
+
+
+
 class DiscourseProxy(Proxy):
     """
     Discourse dalec proxy to fetch the last messages.
@@ -57,9 +64,15 @@ class DiscourseProxy(Proxy):
 
         contents = {}
         for topic in topics:
+            category = category_show(client, topic["category_id"])
             contents[topic["id"]] = {
                 **topic,
-                "base_url": settings.DALEC_DISCOURSE_BASE_URL,  # to reconstruct url later
+                "category": {
+                    "id": category["id"],
+                    "name": category["name"],
+                    "slug": category["slug"],
+                    },
+                "base_url": settings.DALEC_DISCOURSE_BASE_URL,  # to reconstruct different url later
                 "last_update_dt": now(),
                 "creation_dt": topic["created_at"],
             }
