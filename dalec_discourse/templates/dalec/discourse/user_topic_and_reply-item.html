@@ -18,7 +18,7 @@
 
     <td class="discourse user_topic_and_reply date">
         il y a <span title='{{object.creation_dt|date:"DATE_FORMAT"}}'>
-            {{object.content_data.created_at|api_date|timesince}}
+            {{object.content_data.created_at|to_datetime|timesince}}
         </span>
 
     <button id="btnFadetoggle"
