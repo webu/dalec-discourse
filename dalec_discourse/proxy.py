@@ -94,6 +94,7 @@ class DiscourseProxy(Proxy):
 
         contents = {}
         for category in categories:
+            category["id"] = str(category["id"])
             contents[category["id"]] = {
                 **category,
                 "base_url": settings.DALEC_DISCOURSE_BASE_URL,  # to reconstruct url later
@@ -123,6 +124,8 @@ class DiscourseProxy(Proxy):
             )
             content = {k: v for k, v in topic_and_reply.items()}
 
+            category = category_show(client, topic_and_reply["category_id"])
+
             post_url = "{}/t/{}/{}{}".format(
                     settings.DALEC_DISCOURSE_BASE_URL,
                     topic_and_reply["slug"],
@@ -131,6 +134,11 @@ class DiscourseProxy(Proxy):
                     )
             content.update(
                 {
+                    "category": {
+                        "id": category["id"],
+                        "name": category["name"],
+                        "slug": category["slug"],
+                        },
                     "post_url": post_url,
                     "id": id,
                     "creation_dt": topic_and_reply["created_at"],
