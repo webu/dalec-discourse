@@ -72,6 +72,7 @@ class DiscourseProxy(Proxy):
                     topic["id"],
                     )
 
+            topic["id"] = str(topic["id"])
             contents[topic["id"]] = {
                 **topic,
                 "category": {
@@ -132,10 +133,11 @@ class DiscourseProxy(Proxy):
                     topic_and_reply["topic_id"],
                     "/{}".format(topic_and_reply["post_id"]) if topic_and_reply["post_id"] else ""
                     )
+
             content.update(
                 {
                     "category": {
-                        "id": category["id"],
+                        "id": str(category["id"]),
                         "name": category["name"],
                         "slug": category["slug"],
                         },
