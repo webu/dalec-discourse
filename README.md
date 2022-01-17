@@ -64,4 +64,10 @@ Django settings must define:
   - `DALEC_DISCOURSE_API_USERNAME` : discourse username (ex: `admin`)
   - `DALEC_DISCOURSE_API_TOKEN` : discourse api token (ex: `azeazeaezdfqsmlkrjzr`)
 
+It could also define the login/password attribute, and then this auth method will be used
+(may be usefull for htaccess access for instance):
+
+  - `DISCOURSE_AUTH_USERNAME`
+  - `DISCOURSE_AUTH_PASSWORD`
+
 
