@@ -16,12 +16,16 @@ client = DiscourseClient(
     api_key=settings.DALEC_DISCOURSE_API_KEY,
 )
 
-
 # monkey patch because not yet upstream...
-def category_show(client, category_id):
-    response = client._get("/c/{0}/show".format(category_id))
+def category_show(category_id, **kwargs):
+    response = client._get("/c/{0}/show".format(category_id), **kwargs)
     return response["category"]
 
+
+client.category_show = category_show
+
+client.auth_username = getattr(settings, "DISCOURSE_AUTH_USERNAME", None)
+client.auth_password = getattr(settings, "DISCOURSE_AUTH_PASSWORD", None)
 
 
 class DiscourseProxy(Proxy):
@@ -31,15 +35,30 @@ class DiscourseProxy(Proxy):
 
     app = "discourse"
 
+    def __init__(self):
+        self.kwargs = {"override_request_kwargs": {}}
+
+        if client.auth_username and client.auth_password:
+            self.kwargs["override_request_kwargs"]["auth"] = (
+                client.auth_username,
+                client.auth_password,
+            )
+
     def _fetch(
         self, nb: int, content_type: str, channel: str, channel_object: str
     ) -> Dict[str, dict]:
+
+        kwargs = self.kwargs
+        kwargs["per_page"] = nb
+
         if content_type == "topic":
-            return self._fetch_latest_topics(nb, channel, channel_object)
+            return self._fetch_latest_topics(nb, channel, channel_object, **kwargs)
         elif content_type == "category":
-            return self._fetch_categories(nb, channel, channel_object)
+            return self._fetch_categories(nb, channel, channel_object, **kwargs)
         elif content_type == "user_topic_and_reply":
-            return self._fetch_user_topics_and_replies(nb, channel, channel_object)
+            return self._fetch_user_topics_and_replies(
+                nb, channel, channel_object, **kwargs
+            )
 
         raise ValueError(
             f"""
@@ -47,30 +66,30 @@ class DiscourseProxy(Proxy):
                 user_topic_and_reply."""
         )
 
-    def _fetch_latest_topics(self, nb, channel=None, channel_object=None):
+    def _fetch_latest_topics(self, nb, channel=None, channel_object=None, **kwargs):
         """
         Get latest topics from entire forum or category
         """
-        options = {"per_page": nb, "override_request_kwargs": {"allow_redirects": True}}
+        kwargs["override_request_kwargs"]["allow_redirects"] = True
 
         if channel == "category" and channel_object is not None:
-            topics = client.category_latest_topics(name=channel_object, **options)[
+            topics = client.category_latest_topics(name=channel_object, **kwargs)[
                 "topic_list"
             ]["topics"]
         else:
-            topics = client.latest_topics(name=channel_object, **options,)[
+            topics = client.latest_topics(name=channel_object, **kwargs,)[
                 "topic_list"
             ]["topics"]
 
         contents = {}
         for topic in topics:
-            category = category_show(client, topic["category_id"])
+            category = client.category_show(topic["category_id"], **kwargs)
 
             post_url = "{}/t/{}/{}".format(
-                    settings.DALEC_DISCOURSE_BASE_URL,
-                    topic["slug"],
-                    topic["id"],
-                    )
+                settings.DALEC_DISCOURSE_BASE_URL,
+                topic["slug"],
+                topic["id"],
+            )
 
             topic["id"] = str(topic["id"])
             contents[topic["id"]] = {
@@ -79,7 +98,7 @@ class DiscourseProxy(Proxy):
                     "id": category["id"],
                     "name": category["name"],
                     "slug": category["slug"],
-                    },
+                },
                 "base_url": settings.DALEC_DISCOURSE_BASE_URL,  # to reconstruct different url later
                 "post_url": post_url,
                 "last_update_dt": now(),
@@ -87,7 +106,7 @@ class DiscourseProxy(Proxy):
             }
         return contents
 
-    def _fetch_categories(self, nb, channel=None, channel_object=None):
+    def _fetch_categories(self, nb, channel=None, channel_object=None, **kwargs):
         """
         Get categories
         """
@@ -104,7 +123,9 @@ class DiscourseProxy(Proxy):
             }
         return contents
 
-    def _fetch_user_topics_and_replies(self, nb, channel=None, channel_object=None):
+    def _fetch_user_topics_and_replies(
+        self, nb, channel=None, channel_object=None, **kwargs
+    ):
         """
         Get latest topics and replies of a given user identified by its username `channel_object`
         """
@@ -116,7 +137,9 @@ class DiscourseProxy(Proxy):
 
         # 4 = topic
         # 5 = reply
-        topics_and_replies = client.user_actions(username=channel_object, filter="4,5")
+        topics_and_replies = client.user_actions(
+            username=channel_object, filter="4,5", **kwargs
+        )
 
         contents = {}
         for topic_and_reply in topics_and_replies:
@@ -125,14 +148,16 @@ class DiscourseProxy(Proxy):
             )
             content = {k: v for k, v in topic_and_reply.items()}
 
-            category = category_show(client, topic_and_reply["category_id"])
+            category = client.category_show(topic_and_reply["category_id"], **kwargs)
 
             post_url = "{}/t/{}/{}{}".format(
-                    settings.DALEC_DISCOURSE_BASE_URL,
-                    topic_and_reply["slug"],
-                    topic_and_reply["topic_id"],
-                    "/{}".format(topic_and_reply["post_id"]) if topic_and_reply["post_id"] else ""
-                    )
+                settings.DALEC_DISCOURSE_BASE_URL,
+                topic_and_reply["slug"],
+                topic_and_reply["topic_id"],
+                "/{}".format(topic_and_reply["post_id"])
+                if topic_and_reply["post_id"]
+                else "",
+            )
 
             content.update(
                 {
@@ -140,7 +165,7 @@ class DiscourseProxy(Proxy):
                         "id": str(category["id"]),
                         "name": category["name"],
                         "slug": category["slug"],
-                        },
+                    },
                     "post_url": post_url,
                     "id": id,
                     "creation_dt": topic_and_reply["created_at"],
