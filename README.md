@@ -8,6 +8,15 @@ Plugin of [dalec](https://dev.webu.coop/w/i/dalec).
 
 ## Installation
 
+We use [pydiscourse](https://github.com/bennylope/pydiscourse/), but for version >= 1.2,
+that is not already published. So you should mannualy install the master branch.
+
+```
+pip install git+https://github.com/bennylope/pydiscourse.git@188decb02accb414b4c0a609b94881d09eec7689
+```
+
+then install the module:
+
 ```
 pip install dalec_discourse
 ```
