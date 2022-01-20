@@ -36,10 +36,10 @@ class DiscourseProxy(Proxy):
     app = "discourse"
 
     def __init__(self):
-        self.kwargs = {"override_request_kwargs": {}}
+        self.request_opts = {"override_request_kwargs": {"allow_redirects": True}}
 
         if client.auth_username and client.auth_password:
-            self.kwargs["override_request_kwargs"]["auth"] = (
+            self.request_opts["override_request_kwargs"]["auth"] = (
                 client.auth_username,
                 client.auth_password,
             )
@@ -48,17 +48,14 @@ class DiscourseProxy(Proxy):
         self, nb: int, content_type: str, channel: str, channel_object: str
     ) -> Dict[str, dict]:
 
-        kwargs = self.kwargs
-        kwargs["per_page"] = nb
+        self.request_opts["per_page"] = nb
 
         if content_type == "topic":
-            return self._fetch_latest_topics(nb, channel, channel_object, **kwargs)
+            return self._fetch_latest_topics(nb, channel, channel_object)
         elif content_type == "category":
-            return self._fetch_categories(nb, channel, channel_object, **kwargs)
+            return self._fetch_categories(nb, channel, channel_object)
         elif content_type == "user_topic_and_reply":
-            return self._fetch_user_topics_and_replies(
-                nb, channel, channel_object, **kwargs
-            )
+            return self._fetch_user_topics_and_replies(nb, channel, channel_object)
 
         raise ValueError(
             f"""
@@ -66,30 +63,37 @@ class DiscourseProxy(Proxy):
                 user_topic_and_reply."""
         )
 
-    def _fetch_latest_topics(self, nb, channel=None, channel_object=None, **kwargs):
+    def _fetch_latest_topics(self, nb, channel=None, channel_object=None):
         """
         Get latest topics from entire forum or category
         """
-        kwargs["override_request_kwargs"]["allow_redirects"] = True
-
         if channel == "category" and channel_object is not None:
-            topics = client.category_latest_topics(name=channel_object, **kwargs)[
+            topics = client.category_latest_topics(
+                name=channel_object, **self.request_opts
+            )["topic_list"]["topics"]
+        else:
+            topics = client.latest_topics(name=channel_object, **self.request_opts)[
                 "topic_list"
             ]["topics"]
-        else:
-            topics = client.latest_topics(name=channel_object, **kwargs)["topic_list"][
-                "topics"
-            ]
 
         contents = {}
+        categories = {}
         for topic in topics:
-            category = client.category_show(topic["category_id"], **kwargs)
+            # cache category to avoid multiple request
+            category_id = topic["category_id"]
+            if category_id not in categories.keys():
+                category = client.category_show(category_id, **self.request_opts)
+                categories[category_id] = category
+            else:
+                category = categories[category_id]
 
             post_url = "{}/t/{}/{}".format(
                 settings.DALEC_DISCOURSE_BASE_URL, topic["slug"], topic["id"]
             )
 
             topic["id"] = str(topic["id"])
+            if not topic["last_posted_at"]:
+                topic["last_posted_at"] = topic["created_at"]
             contents[topic["id"]] = {
                 **topic,
                 "category": {
@@ -104,7 +108,7 @@ class DiscourseProxy(Proxy):
             }
         return contents
 
-    def _fetch_categories(self, nb, channel=None, channel_object=None, **kwargs):
+    def _fetch_categories(self, nb, channel=None, channel_object=None):
         """
         Get categories
         """
@@ -121,9 +125,7 @@ class DiscourseProxy(Proxy):
             }
         return contents
 
-    def _fetch_user_topics_and_replies(
-        self, nb, channel=None, channel_object=None, **kwargs
-    ):
+    def _fetch_user_topics_and_replies(self, nb, channel=None, channel_object=None):
         """
         Get latest topics and replies of a given user identified by its username `channel_object`
         """
@@ -136,17 +138,24 @@ class DiscourseProxy(Proxy):
         # 4 = topic
         # 5 = reply
         topics_and_replies = client.user_actions(
-            username=channel_object, filter="4,5", **kwargs
+            username=channel_object, filter="4,5", **self.request_opts
         )
 
         contents = {}
+        categories = {}
         for topic_and_reply in topics_and_replies:
+            # cache category to avoid multiple request
+            category_id = topic_and_reply["category_id"]
+            if category_id not in categories.keys():
+                category = client.category_show(category_id, **self.request_opts)
+                categories[category_id] = category
+            else:
+                category = categories[category_id]
+
             id = "{}-{}".format(
                 topic_and_reply["action_type"], topic_and_reply["post_id"]
             )
             content = {k: v for k, v in topic_and_reply.items()}
-
-            category = client.category_show(topic_and_reply["category_id"], **kwargs)
 
             post_url = "{}/t/{}/{}{}".format(
                 settings.DALEC_DISCOURSE_BASE_URL,
