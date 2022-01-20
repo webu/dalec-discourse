@@ -52,9 +52,9 @@ src = "dalec_discourse/__init__.py"
 # run after the files have been patched
 # and before the git commit is made
 
- [[before_commit]]
- name = "check changelog"
- cmd = "black ./"
+[[before_commit]]
+name = "check black"
+cmd = "black ./"
 
 # Or run some commands after the git tag and the branch
 # have been pushed:
