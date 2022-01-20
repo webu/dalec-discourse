@@ -77,18 +77,16 @@ class DiscourseProxy(Proxy):
                 "topic_list"
             ]["topics"]
         else:
-            topics = client.latest_topics(name=channel_object, **kwargs,)[
-                "topic_list"
-            ]["topics"]
+            topics = client.latest_topics(name=channel_object, **kwargs)["topic_list"][
+                "topics"
+            ]
 
         contents = {}
         for topic in topics:
             category = client.category_show(topic["category_id"], **kwargs)
 
             post_url = "{}/t/{}/{}".format(
-                settings.DALEC_DISCOURSE_BASE_URL,
-                topic["slug"],
-                topic["id"],
+                settings.DALEC_DISCOURSE_BASE_URL, topic["slug"], topic["id"]
             )
 
             topic["id"] = str(topic["id"])
