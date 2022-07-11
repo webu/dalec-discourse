@@ -1,13 +1,11 @@
 from datetime import timedelta
 from typing import Dict
-import requests
 
+import requests
+from dalec.proxy import Proxy
+from django.conf import settings
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
-from django.conf import settings
-
-from dalec.proxy import Proxy
-
 from pydiscourse import DiscourseClient
 
 client = DiscourseClient(
@@ -78,6 +76,7 @@ class DiscourseProxy(Proxy):
 
         contents = {}
         categories = {}
+        username2name = {}
         for topic in topics:
             # cache category to avoid multiple request
             category_id = topic["category_id"]
@@ -94,6 +93,13 @@ class DiscourseProxy(Proxy):
             topic["id"] = str(topic["id"])
             if not topic["last_posted_at"]:
                 topic["last_posted_at"] = topic["created_at"]
+
+            if topic["last_poster_username"] not in username2name.keys():
+                user = client.user(username=topic["last_poster_username"])
+                username2name[topic["last_poster_username"]] = user["name"]
+
+            topic["name"] = username2name[topic["last_poster_username"]]
+
             contents[topic["id"]] = {
                 **topic,
                 "category": {
