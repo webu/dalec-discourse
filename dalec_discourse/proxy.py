@@ -1,11 +1,12 @@
-from datetime import timedelta
+# Standard libs
 from typing import Dict
 
-import requests
-from dalec.proxy import Proxy
+# Django imports
 from django.conf import settings
-from django.utils.dateparse import parse_datetime
 from django.utils.timezone import now
+
+# DALEC imports
+from dalec.proxy import Proxy
 from pydiscourse import DiscourseClient
 
 client = DiscourseClient(
@@ -14,7 +15,9 @@ client = DiscourseClient(
     api_key=settings.DALEC_DISCOURSE_API_KEY,
 )
 
+
 # monkey patch because not yet upstream...
+# FIXME: should be OK since https://github.com/pydiscourse/pydiscourse/commit/3b7b7d2490d9bf09b5f2904ebc4e6903329bd057
 def category_show(category_id, **kwargs):
     response = client._get("/c/{0}/show".format(category_id), **kwargs)
     return response["category"]
@@ -45,7 +48,6 @@ class DiscourseProxy(Proxy):
     def _fetch(
         self, nb: int, content_type: str, channel: str, channel_object: str
     ) -> Dict[str, dict]:
-
         self.request_opts["per_page"] = nb
 
         if content_type == "topic":
@@ -56,9 +58,9 @@ class DiscourseProxy(Proxy):
             return self._fetch_user_topics_and_replies(nb, channel, channel_object)
 
         raise ValueError(
-            f"""
-        Invalid content_type {content_type}. Accepted: topic, category,
-                user_topic_and_reply."""
+            """Invalid content_type {content_type}. Accepted: topic, category, user_topic_and_reply.""".format(
+                content_type=content_type
+            )
         )
 
     def _fetch_latest_topics(self, nb, channel=None, channel_object=None):
@@ -66,13 +68,13 @@ class DiscourseProxy(Proxy):
         Get latest topics from entire forum or category
         """
         if channel == "category" and channel_object is not None:
-            topics = client.category_latest_topics(
-                name=channel_object, **self.request_opts
-            )["topic_list"]["topics"]
-        else:
-            topics = client.latest_topics(name=channel_object, **self.request_opts)[
+            topics = client.category_latest_topics(name=channel_object, **self.request_opts)[
                 "topic_list"
             ]["topics"]
+        else:
+            topics = client.latest_topics(name=channel_object, **self.request_opts)["topic_list"][
+                "topics"
+            ]
 
         contents = {}
         categories = {}
@@ -158,18 +160,14 @@ class DiscourseProxy(Proxy):
             else:
                 category = categories[category_id]
 
-            id = "{}-{}".format(
-                topic_and_reply["action_type"], topic_and_reply["post_id"]
-            )
+            id = "{}-{}".format(topic_and_reply["action_type"], topic_and_reply["post_id"])
             content = {k: v for k, v in topic_and_reply.items()}
 
             post_url = "{}/t/{}/{}{}".format(
                 settings.DALEC_DISCOURSE_BASE_URL,
                 topic_and_reply["slug"],
                 topic_and_reply["topic_id"],
-                "/{}".format(topic_and_reply["post_id"])
-                if topic_and_reply["post_id"]
-                else "",
+                "/{}".format(topic_and_reply["post_id"]) if topic_and_reply["post_id"] else "",
             )
 
             content.update(

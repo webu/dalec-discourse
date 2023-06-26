@@ -2,20 +2,13 @@
 
 Django Aggregate a Lot of External Content -- Discourse
 
-Aggregate last discourse issue or event from a given discourse instance.
+Aggregate last discourse post from a given discourse instance.
 
-Plugin of [dalec](https://dev.webu.coop/w/i/dalec).
+Plugin of [dalec](https://github.com/webu/dalec).
 
 ## Installation
 
-We use [pydiscourse](https://github.com/bennylope/pydiscourse/), but for version >= 1.2,
-that is not already published. So you should mannualy install the master branch.
-
-```
-pip install git+https://github.com/bennylope/pydiscourse.git@188decb02accb414b4c0a609b94881d09eec7689
-```
-
-then install the module:
+Install the module:
 
 ```
 pip install dalec_discourse
@@ -54,7 +47,7 @@ Retrieves latest topics:
 
 Retrieves latest topics from a category:
 ```django
-{% dalec "discourse" "tpic" channel="category" channel_object="15" %}
+{% dalec "discourse" "topic" channel="category" channel_object="15" %}
 ```
 
 ### Categories
@@ -62,6 +55,14 @@ Retrieves latest topics from a category:
 Retrieves discourse categories:
 ```django
 {% dalec "discourse" "category" %}
+```
+
+### User topics and replies
+
+Retrieves user topics and replies:
+
+```django
+{% dalec "discourse" "user_topic_and_reply" channel="user" channel_object="zorro" %}
 ```
 
 
