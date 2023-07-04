@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 # DALEC imports
 from dalec_discourse import __version__ as dalec_version
 
-project = "Dalec"
+project = "Dalec - Discourse"
 copyright = "2023, Webu"
 author = "Webu"
 release = dalec_version
