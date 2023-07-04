@@ -17,7 +17,7 @@ Plugin of [🤖 dalec](https://github.com/webu/dalec).
 Install the module:
 
 ```
-pip install dalec_discourse
+pip install dalec-discourse
 ```
 
 In django settings `INSTALLED_APPS`, add:
