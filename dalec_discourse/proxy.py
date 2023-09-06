@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils.timezone import now
 
 # DALEC imports
+from dalec import settings as app_settings
 from dalec.proxy import Proxy
 from pydiscourse import DiscourseClient
 
@@ -79,7 +80,11 @@ class DiscourseProxy(Proxy):
         contents = {}
         categories = {}
         username2name = {}
-        for topic in topics:
+        NB_KEPT = app_settings.get_for("NB_CONTENTS_KEPT", "discourse", "topic")
+        for i, topic in enumerate(topics):
+            if i > NB_KEPT:
+                # Early return
+                break
             # cache category to avoid multiple request
             category_id = topic["category_id"]
             if category_id not in categories.keys():
@@ -88,8 +93,8 @@ class DiscourseProxy(Proxy):
             else:
                 category = categories[category_id]
 
-            post_url = "{}/t/{}/{}".format(
-                settings.DALEC_DISCOURSE_BASE_URL, topic["slug"], topic["id"]
+            post_url = "{}/t/{}/{}/{}".format(
+                settings.DALEC_DISCOURSE_BASE_URL, topic["slug"], topic["id"], topic["posts_count"]
             )
 
             topic["id"] = str(topic["id"])
@@ -139,9 +144,9 @@ class DiscourseProxy(Proxy):
         """
 
         if channel != "user":
-            raise ValueError(f"channel should be in : user .")
+            raise ValueError("channel should be in : user .")
         if not channel_object:
-            raise ValueError(f"channel_object must be defined")
+            raise ValueError("channel_object must be defined")
 
         # 4 = topic
         # 5 = reply
