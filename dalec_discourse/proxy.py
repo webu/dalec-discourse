@@ -98,7 +98,7 @@ class DiscourseProxy(Proxy):
             )
             post_content = client.post(topic_id=topic["id"], post_id=topic["posts_count"])[
                 "post_stream"
-            ]["posts"][0]
+            ]["posts"][-1]
 
             topic["id"] = str(topic["id"])
             if not topic["last_posted_at"]:
