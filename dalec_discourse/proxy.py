@@ -96,6 +96,9 @@ class DiscourseProxy(Proxy):
             post_url = "{}/t/{}/{}/{}".format(
                 settings.DALEC_DISCOURSE_BASE_URL, topic["slug"], topic["id"], topic["posts_count"]
             )
+            post_content = client.post(topic_id=topic["id"], post_id=topic["posts_count"])[
+                "post_stream"
+            ]["posts"][0]
 
             topic["id"] = str(topic["id"])
             if not topic["last_posted_at"]:
@@ -109,6 +112,7 @@ class DiscourseProxy(Proxy):
 
             contents[topic["id"]] = {
                 **topic,
+                "latest_post": post_content,
                 "category": {
                     "id": category["id"],
                     "name": category["name"],
