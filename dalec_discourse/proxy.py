@@ -155,7 +155,7 @@ class DiscourseProxy(Proxy):
         # 4 = topic
         # 5 = reply
         topics_and_replies = client.user_actions(
-            username=channel_object, filter="4,5", **self.request_opts
+            username=channel_object, actions_filter="4,5", **self.request_opts
         )
 
         contents = {}
