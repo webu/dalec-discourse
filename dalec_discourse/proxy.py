@@ -1,5 +1,7 @@
 # Standard libs
+from distutils.version import LooseVersion
 from typing import Dict
+import warnings
 
 # Django imports
 from django.conf import settings
@@ -8,6 +10,7 @@ from django.utils.timezone import now
 # DALEC imports
 from dalec import settings as app_settings
 from dalec.proxy import Proxy
+import pydiscourse
 from pydiscourse import DiscourseClient
 
 client = DiscourseClient(
@@ -154,9 +157,24 @@ class DiscourseProxy(Proxy):
 
         # 4 = topic
         # 5 = reply
-        topics_and_replies = client.user_actions(
-            username=channel_object, actions_filter="4,5", **self.request_opts
-        )
+        filter_value = "4,5"
+        user_actions_kwargs = {"username": channel_object}
+
+        # Since breaking change from pydiscourse 1.5.0 to 1.6.0
+        # https://github.com/pydiscourse/pydiscourse/commit/d7e249847a1d00b2652e1edc2afccfc2c05c2da8
+        pyd_current_version = pydiscourse.__version__
+        pyd_required_version = "1.6.0"
+        if LooseVersion(pyd_current_version) < LooseVersion(pyd_required_version):
+            user_actions_kwargs["filter"] = filter_value
+            warnings.warn(
+                "This minor version is the last to support pydiscourse 1.5.0",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        else:
+            user_actions_kwargs["actions_filter"] = filter_value
+
+        topics_and_replies = client.user_actions(**{**user_actions_kwargs, **self.request_opts})
 
         contents = {}
         categories = {}
