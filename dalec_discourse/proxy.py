@@ -167,7 +167,7 @@ class DiscourseProxy(Proxy):
         if LooseVersion(pyd_current_version) < LooseVersion(pyd_required_version):
             user_actions_kwargs["filter"] = filter_value
             warnings.warn(
-                "This minor version is the last to support pydiscourse 1.5.0",
+                "This minor version is the last to support pydiscourse < 1.6.0",
                 DeprecationWarning,
                 stacklevel=2,
             )
