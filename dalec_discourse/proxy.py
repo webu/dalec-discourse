@@ -85,7 +85,7 @@ class DiscourseProxy(Proxy):
         username2name = {}
         NB_KEPT = app_settings.get_for("NB_CONTENTS_KEPT", "discourse", "topic")
         for i, topic in enumerate(topics):
-            if i > NB_KEPT:
+            if i >= NB_KEPT:
                 # Early return
                 break
             # cache category to avoid multiple request
