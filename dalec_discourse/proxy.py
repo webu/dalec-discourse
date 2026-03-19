@@ -131,7 +131,7 @@ class DiscourseProxy(Proxy):
         """
         Get categories
         """
-        categories = client.categories()
+        categories = client.categories(include_subcategories="true")
 
         contents = {}
         for category in categories:
